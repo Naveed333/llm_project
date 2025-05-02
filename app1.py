@@ -1,31 +1,17 @@
+# app.py (updated)
+
 import streamlit as st
 from db import get_db_connection
 from auth import register_user, login_user, load_preferences, save_preferences
 from detect import detect_vegetables, candidate_labels
 from components import login_form, preferences_form, ingredient_input
 from PIL import Image
-from recipe_gen import generate_recipe
+from recipe_gen import generate_recipe  # now calls real model
 
 # --- Initialize DB Connection ---
 conn = get_db_connection()
 
-# --- Page Configuration ---
-st.set_page_config(page_title="VeggieChef", page_icon="🥗", layout="wide")
-
-# Apply modern theme with CSS
-st.markdown(
-    """
-    <style>
-      .css-18e3th9 { font-family: -apple-system, BlinkMacSystemFont, 'San Francisco', sans-serif; }
-      .block-container { padding: 2rem 4rem; background-color: #F9F9F9; }
-      .stTabs [role="tab"] { padding: 0.75rem 1.5rem; font-size: 1.1rem; }
-      .stTabs [role="tabSelected"] { color: #DA291C; border-bottom: 3px solid #DA291C; }
-      .card { background: #FFF; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-      .stButton>button { background: #FFC72C; color: #DA291C; border-radius: 0.75rem; padding: 0.75rem 1.5rem; font-weight: 600; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+# --- Page Config & CSS omitted for brevity ---
 
 # --- Session Defaults ---
 if "user" not in st.session_state:
@@ -33,10 +19,9 @@ if "user" not in st.session_state:
 if "subscription" not in st.session_state:
     st.session_state.subscription = "Free"
 
-# --- Navigation Tabs ---
+# --- Tabs ---
 tab1, tab2, tab3 = st.tabs(["🏠 Home", "⚙️ Preferences", "👤 Profile"])
 
-# --- Tab 1: Home ---
 with tab1:
     st.header("Veggie Detection & Recipe Plan")
     if not st.session_state.user:
@@ -45,13 +30,8 @@ with tab1:
         st.markdown("Upload a photo or type ingredients to get started.")
         col_img, col_input = st.columns([2, 1])
         with col_input:
-            # Input controls
             uploaded, manual, top_k = ingredient_input()
-
-            # Spacer to keep button at consistent position
             st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-
-            # Generate Plan button always at bottom of this panel
             if st.button("Generate Plan", key="home_generate"):
                 ingredients = []
                 if uploaded and top_k:
@@ -64,11 +44,10 @@ with tab1:
                         i.strip().lower() for i in manual.split(",") if i.strip()
                     ]
                 st.session_state.detected = list(dict.fromkeys(ingredients))
-            # Preview uploaded image if any
+
             if uploaded:
-                st.image(
-                    uploaded, caption="Image Preview", use_column_width=False, width=40
-                )
+                st.image(uploaded, caption="Image Preview", width=200)
+
         with col_img:
             if "detected" in st.session_state:
                 st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -82,32 +61,50 @@ with tab1:
             else:
                 st.info("Detection results will appear here.")
 
-        # Recipe suggestions for all users
         if "detected" in st.session_state:
             st.markdown("---")
             st.subheader("Recipe Suggestions")
             ingredients = st.session_state.detected
             ing_list = ", ".join([i.title() for i in ingredients])
-            if st.session_state.subscription == "Paid":
-                prefs = load_preferences(st.session_state.user_id) or {}
-                info = (
-                    f"Spice: {prefs.get('spice_level',5)}/10 | "
-                    f"Cuisine: {prefs.get('cuisine','Indian')} | "
-                    f"Time: {prefs.get('cook_time','Easy (10-15 min)')}"
-                )
-                st.markdown(f"**Personalized Settings:** {info}")
-                st.text_area(
-                    "Your Recipe:",
-                    f"Here is a personalized recipe for {ing_list} based on your preferences.",
-                    height=200,
-                )
-            else:
-                st.text_area(
-                    "General Recipe:",
-                    f"Here is a general recipe you can try with {ing_list}.",
-                    height=200,
-                )
 
+            # Compute and display
+            try:
+                if st.session_state.subscription == "Paid":
+                    prefs = load_preferences(st.session_state.user_id) or {}
+                    # Build settings summary
+                    info = (
+                        f"Spice: {prefs.get('spice_level',5)}/10 | "
+                        f"Cuisine: {prefs.get('cuisine','any')} | "
+                        f"Time: {prefs.get('cook_time','any')}"
+                    )
+                    st.markdown(f"**Personalized Settings:** {info}")
+
+                    # Flatten prefs into a string
+                    pref_items = [f"{k}: {v}" for k, v in prefs.items() if v]
+                    pref_str = "; ".join(pref_items)
+
+                    recipe = generate_recipe(
+                        ingredients_list=ing_list.lower(),
+                        cuisine=prefs.get("cuisine", "any"),
+                        difficulty=prefs.get("cook_time", "any"),
+                        meal="any",
+                        preferences=pref_str,
+                    )
+                    st.text_area("Your Recipe:", recipe, height=400)
+
+                else:
+                    recipe = generate_recipe(
+                        ingredients_list=ing_list.lower(),
+                        cuisine="any",
+                        difficulty="any",
+                        meal="any",
+                        preferences="",
+                    )
+                    st.text_area("General Recipe:", recipe, height=400)
+            except Exception as e:
+                st.error(f"Error generating recipe: {e}")
+
+# (Tabs 2 & 3 remain unchanged)
 # --- Tab 2: Preferences ---
 with tab2:
     st.header("Manage Your Preferences")

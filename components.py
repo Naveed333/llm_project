@@ -79,7 +79,7 @@ def preferences_form(prefs: dict, disabled: bool):
 def ingredient_input():
     st.sidebar.subheader("Ingredients")
     uploaded = st.sidebar.file_uploader("Upload Image", type=["jpg", "png"])
-    manual = st.sidebar.text_input("Or type ingredients", "")
+    manual = st.sidebar.text_input("Or Enter the ingredients", "")
     top_k = None
     if uploaded:
         top_k = st.sidebar.slider("How many to detect?", 1, len(candidate_labels), 5)

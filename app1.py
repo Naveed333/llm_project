@@ -39,7 +39,7 @@ with tab1:
     if not st.session_state.user:
         st.info("Please log in on the Profile tab to use detection features.")
     else:
-        st.markdown("Upload a photo or type ingredients to get started.")
+        st.markdown("Upload a photo or enter the ingredients to get started.")
         col_img, col_input = st.columns([2, 1])
         with col_input:
             uploaded, manual, top_k = ingredient_input()

@@ -20,7 +20,9 @@ def get_db_connection(db_path: str = "users.db"):
     CREATE TABLE IF NOT EXISTS preferences (
       user_id INTEGER PRIMARY KEY,
       spice_level INTEGER,
+      serving INTEGER,
       cuisine TEXT,
+      meal_type TEXT,
       cook_time TEXT,
       health_goals TEXT,
       FOREIGN KEY(user_id) REFERENCES users(id)

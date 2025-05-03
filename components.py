@@ -18,11 +18,14 @@ def login_form():
 def preferences_form(prefs: dict, disabled: bool):
     st.sidebar.subheader("📋 Preferences")
     spice = st.sidebar.slider(
-        "Spice Level", 0, 10, prefs.get("spice_level", 5), disabled=disabled
+        "Spice Level", 1, 3, prefs.get("spice_level", 5), disabled=disabled
+    )
+    serving = st.sidebar.slider(
+        "Serving", 1, 5, prefs.get("serving", 2), disabled=disabled
     )
     cuisine_list = prefs.get("cuisine_list", [])
     cuisine = st.sidebar.selectbox(
-        "Cuisine",
+        "Cuisine Type",
         cuisine_list,
         index=(
             cuisine_list.index(prefs.get("cuisine", cuisine_list[0]))
@@ -49,9 +52,22 @@ def preferences_form(prefs: dict, disabled: bool):
         default=prefs.get("health_goals", []),
         disabled=disabled,
     )
+    meal_options = prefs.get("meal_options", ["Breakfast", "Lunch", "Dinner", "Snack"])
+    meal_type = st.sidebar.selectbox(
+        "Meal Type",
+        meal_options,
+        index=(
+            meal_options.index(prefs.get("meal_type", meal_options[0]))
+            if prefs.get("meal_type") in meal_options
+            else 0
+        ),
+        disabled=disabled,
+    )
     if st.sidebar.button("Save Preferences") and not disabled:
         return {
             "spice_level": spice,
+            "meal_type": meal_type,
+            "serving": serving,
             "cuisine": cuisine,
             "cook_time": cook,
             "health_goals": health,

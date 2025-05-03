@@ -42,16 +42,19 @@ def load_preferences(user_id: int):
     conn = get_db_connection()
     c = conn.cursor()
     c.execute(
-        "SELECT spice_level,cuisine,cook_time,health_goals FROM preferences WHERE user_id=?",
+        "SELECT serving,spice_level,meal_type,cuisine,cook_time,health_goals FROM preferences WHERE user_id=?",
         (user_id,),
     )
     row = c.fetchone()
+    print("ROw is :::: ", row)
     if row:
         return {
-            "spice_level": row[0],
-            "cuisine": row[1],
-            "cook_time": row[2],
-            "health_goals": row[3].split(","),
+            "serving": row[0],
+            "spice_level": row[1],
+            "meal_type": row[2],
+            "cuisine": row[3],
+            "cook_time": row[4],
+            "health_goals": row[5].split(","),
         }
     return None
 
@@ -61,7 +64,15 @@ def save_preferences(user_id: int, prefs: dict):
     c = conn.cursor()
     goals = ",".join(prefs["health_goals"])
     c.execute(
-        "REPLACE INTO preferences(user_id,spice_level,cuisine,cook_time,health_goals) VALUES(?,?,?,?,?)",
-        (user_id, prefs["spice_level"], prefs["cuisine"], prefs["cook_time"], goals),
+        "REPLACE INTO preferences(user_id,serving,spice_level,meal_type,cuisine,cook_time,health_goals) VALUES(?,?,?,?,?,?,?)",
+        (
+            user_id,
+            prefs["serving"],
+            prefs["spice_level"],
+            prefs["meal_type"],
+            prefs["cuisine"],
+            prefs["cook_time"],
+            goals,
+        ),
     )
     conn.commit()

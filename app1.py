@@ -12,6 +12,7 @@ from recipe_gen import generate_recipe  # now calls real model
 conn = get_db_connection()
 
 # --- Page Config & CSS omitted for brevity ---
+st.set_page_config(page_title="IngrEdibles")
 
 # --- Session Defaults ---
 if "user" not in st.session_state:
@@ -23,7 +24,7 @@ if "subscription" not in st.session_state:
 tab1, tab2, tab3 = st.tabs(["🏠 Home", "⚙️ Preferences", "👤 Profile"])
 
 with tab1:
-    st.header("Veggie Detection & Recipe Plan")
+    st.header("IngrEdible AI")
     if not st.session_state.user:
         st.info("Please log in on the Profile tab to use detection features.")
     else:
@@ -71,10 +72,13 @@ with tab1:
             try:
                 if st.session_state.subscription == "Paid":
                     prefs = load_preferences(st.session_state.user_id) or {}
+                    print("Prefrencess are :::: ", prefs)
                     # Build settings summary
                     info = (
                         f"Spice: {prefs.get('spice_level',5)}/10 | "
+                        f"Serving: {prefs.get('serving',2)} | "
                         f"Cuisine: {prefs.get('cuisine','any')} | "
+                        f"Meal Tye: {prefs.get('meal_type','any')} | "
                         f"Time: {prefs.get('cook_time','any')}"
                     )
                     st.markdown(f"**Personalized Settings:** {info}")
@@ -114,8 +118,10 @@ with tab2:
         existing = load_preferences(st.session_state.user_id) or {}
         if existing:
             with st.expander("Your Saved Preferences", expanded=True):
-                st.write(f"- **Spice Level:** {existing.get('spice_level',5)}/10")
+                st.write(f"- **Spice Level:** {existing.get('spice_level',5)}/5")
+                st.write(f"- **Serving:** {existing.get('serving',2)}")
                 st.write(f"- **Cuisine:** {existing.get('cuisine','Indian')}  ")
+                st.write(f"- **Meal Type:** {existing.get('meal_type','Lunch')}  ")
                 st.write(
                     f"- **Cook Time:** {existing.get('cook_time','Easy (10-15 min)')}  "
                 )
@@ -140,6 +146,7 @@ with tab2:
                 "Fatty Liver Recovery",
                 "Weight Loss",
             ],
+            "meal_type": ["Breakfast", "Lunch", "Dinner", "Snack"],
         }
         new_prefs = preferences_form({**defaults, **existing}, disabled=False)
         if new_prefs:

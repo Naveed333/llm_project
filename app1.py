@@ -6,19 +6,19 @@ from auth import register_user, login_user, load_preferences, save_preferences
 from detect import detect_vegetables, candidate_labels
 from components import login_form, preferences_form, ingredient_input
 from PIL import Image
-from recipe_gen import generate_recipe  # now accepts recipe_name param
+from recipe_gen import generate_recipe  # accepts recipe_name parameter
 
 # --- Initialize DB Connection ---
 conn = get_db_connection()
 
-# --- Page Config & CSS omitted for brevity ---
-st.set_page_config(page_title="IngrEdibles")
+# --- Streamlit Page Config ---
+st.set_page_config(page_title="IngrEdibles", layout="wide")
 
 # --- Cart icon in the top-right ---
 cart_html = """
 <div style="position:fixed; top:10px; right:20px; z-index:1000;">
   <a href="/cart">
-    <img src="https://img.icons8.com/ios-filled/40/000000/shopping-cart.png"/>
+    <img src="https://img.icons8.com/ios-filled/40/000000/shopping-cart.png" alt="Cart"/>
   </a>
 </div>
 """
@@ -41,7 +41,6 @@ with tab1:
     else:
         st.markdown("Upload a photo or type ingredients to get started.")
         col_img, col_input = st.columns([2, 1])
-        # Input panel
         with col_input:
             uploaded, manual, top_k = ingredient_input()
             # Optional recipe name for paid users
@@ -62,11 +61,9 @@ with tab1:
                         i.strip().lower() for i in manual.split(",") if i.strip()
                     ]
                 st.session_state.detected = list(dict.fromkeys(ingredients))
-
             if uploaded:
                 st.image(uploaded, caption="Image Preview", width=200)
 
-        # Display detected ingredients
         with col_img:
             if "detected" in st.session_state:
                 st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -80,17 +77,14 @@ with tab1:
             else:
                 st.info("Detection results will appear here.")
 
-        # Generate recipe
         if "detected" in st.session_state:
             st.markdown("---")
             st.subheader("Recipe Suggestions")
             ingredients = st.session_state.detected
             ing_list = ", ".join([i.title() for i in ingredients])
-
             try:
                 if st.session_state.subscription == "Paid":
                     prefs = load_preferences(st.session_state.user_id) or {}
-                    # Build settings summary
                     info = (
                         f"Spice: {prefs.get('spice_level',5)}/10 | "
                         f"Serving: {prefs.get('serving',2)} | "
@@ -99,22 +93,17 @@ with tab1:
                         f"Time: {prefs.get('cook_time','any')}"
                     )
                     st.markdown(f"**Personalized Settings:** {info}")
-
-                    # Flatten prefs into a string
                     pref_items = [f"{k}: {v}" for k, v in prefs.items() if v]
                     pref_str = "; ".join(pref_items)
-
-                    # Call generate_recipe with optional recipe_name
                     recipe = generate_recipe(
                         ingredients_list=ing_list.lower(),
                         cuisine=prefs.get("cuisine", "any"),
                         difficulty=prefs.get("cook_time", "any"),
                         meal=prefs.get("meal_type", "any"),
                         preferences=pref_str,
-                        recipe_name=recipe_name,  # new optional parameter
+                        recipe_name=recipe_name,
                     )
                     st.markdown(recipe, unsafe_allow_html=True)
-
                 else:
                     recipe = generate_recipe(
                         ingredients_list=ing_list.lower(),
@@ -125,7 +114,6 @@ with tab1:
                         recipe_name=None,
                     )
                     st.text_area("General Recipe:", recipe, height=400)
-
             except Exception as e:
                 st.error(f"Error generating recipe: {e}")
 
@@ -140,10 +128,10 @@ with tab2:
             with st.expander("Your Saved Preferences", expanded=True):
                 st.write(f"- **Spice Level:** {existing.get('spice_level',5)}/5")
                 st.write(f"- **Serving:** {existing.get('serving',2)}")
-                st.write(f"- **Cuisine:** {existing.get('cuisine','Indian')}  ")
-                st.write(f"- **Meal Type:** {existing.get('meal_type','Lunch')}  ")
+                st.write(f"- **Cuisine:** {existing.get('cuisine','Indian')}")
+                st.write(f"- **Meal Type:** {existing.get('meal_type','Lunch')}")
                 st.write(
-                    f"- **Cook Time:** {existing.get('cook_time','Easy (10-15 min)')}  "
+                    f"- **Cook Time:** {existing.get('cook_time','Easy (10-15 min)')}"
                 )
                 st.write(
                     f"- **Health Goals:** {', '.join(existing.get('health_goals',[]))}"
@@ -209,11 +197,10 @@ with tab3:
             if submitted:
                 if mode == "Register":
                     ok = register_user(uname, pwd)
-                    (
+                    if ok:
                         st.success("Registered! Please log in.")
-                        if ok
-                        else st.error("Username taken.")
-                    )
+                    else:
+                        st.error("Username taken.")
                 else:
                     info = login_user(uname, pwd)
                     if info:
@@ -255,16 +242,16 @@ footer_html = """
 <hr style="margin-top:2rem;"/>
 <div style="text-align:center; padding:1rem 0;">
   <a href="https://twitter.com/YourProfile" target="_blank" style="margin:0 8px;">
-    <img src="https://img.icons8.com/ios-glyphs/24/000000/twitter.png"/>
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/twitter.png" alt="Twitter"/>
   </a>
   <a href="https://facebook.com/YourProfile" target="_blank" style="margin:0 8px;">
-    <img src="https://img.icons8.com/ios-glyphs/24/000000/facebook-new.png"/>
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/facebook-new.png" alt="Facebook"/>
   </a>
   <a href="https://instagram.com/YourProfile" target="_blank" style="margin:0 8px;">
-    <img src="https://img.icons8.com/ios-glyphs/24/000000/instagram-new.png"/>
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/instagram-new.png" alt="Instagram"/>
   </a>
   <a href="https://linkedin.com/in/YourProfile" target="_blank" style="margin:0 8px;">
-    <img src="https://img.icons8.com/ios-glyphs/24/000000/linkedin-circled.png"/>
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/linkedin-circled.png" alt="LinkedIn"/>
   </a>
 </div>
 """

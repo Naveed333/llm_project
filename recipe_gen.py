@@ -60,7 +60,7 @@ print(f"Using device: {device}  |  Model device: {model.device}")
 
 def generate_text(
     prompt: str,
-    max_new_tokens: int = 512,
+    max_new_tokens: int = 750,
     temperature: float = 0.7,
     top_p: float = 0.95,
     repetition_penalty: float = 1.1,
@@ -84,15 +84,21 @@ def generate_recipe(
     difficulty: str,
     meal: str,
     preferences: str,
+    recipe_name: str,
     temperature: float = 0.7,
 ) -> str:
     prompt = (
         "<s>[INST]\n"
-        f"Create a detailed recipe using these ingredients: {ingredients_list}.\n"
+        f"Create a detailed recipe for: {recipe_name} but using these ingredients: {ingredients_list}\n"
+        "If the user provides an incorrect or faulty recipe name or ingredients, do not hallucinate—"
+        "instead generate a random recipe using the given ingredients and include at the end:\n"
+        "“⚠️ DISCLAIMER: The user-supplied recipe name or ingredients were invalid; this recipe is a generated approximation.”\n\n"
         f"Cuisine type: {cuisine}\n"
         f"Cook Time: {difficulty}\n"
         f"Meal type: {meal}\n"
         f"Additional preferences: {preferences}\n\n"
+        "If any of the ingredients include pork, bacon, ham, lard, or other non-halal items, include at the end of the recipe:\n"
+        "“⚠️ DISCLAIMER: This recipe contains non-halal ingredients and is intended for consumers who do not follow halal dietary restrictions.”\n\n"
         "The recipe should include:\n"
         "1. Title\n"
         "2. Serving\n"
@@ -100,8 +106,7 @@ def generate_recipe(
         "4. Step-by-step instructions\n"
         "5. Prep and cook times\n"
         "6. Nutritional info per serving (calories, macros)\n"
-        "7. Health Data: for each serving, give % of daily recommended values, "
-        "dietary tags (e.g., vegan, keto, gluten-free), and note key health benefits or cautions\n"
+        "7. Health Data: for each serving, give % of daily recommended values, dietary tags (e.g., vegan, keto, gluten-free), and note key health benefits or cautions\n"
         "[/INST]"
     )
     return generate_text(prompt, temperature=temperature)

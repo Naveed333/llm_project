@@ -1,4 +1,4 @@
-# app.py (updated)
+# app.py (updated with optional recipe name for paid users)
 
 import streamlit as st
 from db import get_db_connection
@@ -6,7 +6,7 @@ from auth import register_user, login_user, load_preferences, save_preferences
 from detect import detect_vegetables, candidate_labels
 from components import login_form, preferences_form, ingredient_input
 from PIL import Image
-from recipe_gen import generate_recipe  # now calls real model
+from recipe_gen import generate_recipe  # now accepts recipe_name param
 
 # --- Initialize DB Connection ---
 conn = get_db_connection()
@@ -30,8 +30,14 @@ with tab1:
     else:
         st.markdown("Upload a photo or type ingredients to get started.")
         col_img, col_input = st.columns([2, 1])
+        # Input panel
         with col_input:
             uploaded, manual, top_k = ingredient_input()
+            # Optional recipe name for paid users
+            if st.session_state.subscription == "Paid":
+                recipe_name = st.text_input("Recipe Name (optional)")
+            else:
+                recipe_name = None
             st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
             if st.button("Generate Plan", key="home_generate"):
                 ingredients = []
@@ -49,6 +55,7 @@ with tab1:
             if uploaded:
                 st.image(uploaded, caption="Image Preview", width=200)
 
+        # Display detected ingredients
         with col_img:
             if "detected" in st.session_state:
                 st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -62,23 +69,22 @@ with tab1:
             else:
                 st.info("Detection results will appear here.")
 
+        # Generate recipe
         if "detected" in st.session_state:
             st.markdown("---")
             st.subheader("Recipe Suggestions")
             ingredients = st.session_state.detected
             ing_list = ", ".join([i.title() for i in ingredients])
 
-            # Compute and display
             try:
                 if st.session_state.subscription == "Paid":
                     prefs = load_preferences(st.session_state.user_id) or {}
-                    print("Prefrencess are :::: ", prefs)
                     # Build settings summary
                     info = (
                         f"Spice: {prefs.get('spice_level',5)}/10 | "
                         f"Serving: {prefs.get('serving',2)} | "
                         f"Cuisine: {prefs.get('cuisine','any')} | "
-                        f"Meal Tye: {prefs.get('meal_type','any')} | "
+                        f"Meal Type: {prefs.get('meal_type','any')} | "
                         f"Time: {prefs.get('cook_time','any')}"
                     )
                     st.markdown(f"**Personalized Settings:** {info}")
@@ -87,12 +93,14 @@ with tab1:
                     pref_items = [f"{k}: {v}" for k, v in prefs.items() if v]
                     pref_str = "; ".join(pref_items)
 
+                    # Call generate_recipe with optional recipe_name
                     recipe = generate_recipe(
                         ingredients_list=ing_list.lower(),
                         cuisine=prefs.get("cuisine", "any"),
                         difficulty=prefs.get("cook_time", "any"),
-                        meal="any",
+                        meal=prefs.get("meal_type", "any"),
                         preferences=pref_str,
+                        recipe_name=recipe_name,  # new optional parameter
                     )
                     st.text_area("Your Recipe:", recipe, height=400)
 
@@ -103,8 +111,10 @@ with tab1:
                         difficulty="any",
                         meal="any",
                         preferences="",
+                        recipe_name=None,
                     )
                     st.text_area("General Recipe:", recipe, height=400)
+
             except Exception as e:
                 st.error(f"Error generating recipe: {e}")
 

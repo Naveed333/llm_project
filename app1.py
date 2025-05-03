@@ -102,7 +102,8 @@ with tab1:
                         preferences=pref_str,
                         recipe_name=recipe_name,  # new optional parameter
                     )
-                    st.text_area("Your Recipe:", recipe, height=400)
+                    # st.text_area("Your Recipe:", recipe, height=400)
+                    st.markdown(recipe, unsafe_allow_html=True)
 
                 else:
                     recipe = generate_recipe(

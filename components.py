@@ -6,7 +6,7 @@ from detect import candidate_labels
 
 # Login / Register form
 def login_form():
-    st.sidebar.header("🔒 Account")
+    st.sidebar.header("Account")
     mode = st.sidebar.radio("Mode", ["Login", "Register"], index=0)
     username = st.sidebar.text_input("Username", key="auth_user")
     password = st.sidebar.text_input("Password", type="password", key="auth_pw")
@@ -16,7 +16,7 @@ def login_form():
 
 # Preferences form
 def preferences_form(prefs: dict, disabled: bool):
-    st.sidebar.subheader("📋 Preferences")
+    st.sidebar.subheader("Preferences")
     spice = st.sidebar.slider(
         "Spice Level", 1, 3, prefs.get("spice_level", 5), disabled=disabled
     )

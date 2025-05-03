@@ -14,15 +14,18 @@ conn = get_db_connection()
 # --- Streamlit Page Config ---
 st.set_page_config(page_title="IngrEdibles", layout="wide")
 
-# --- Cart icon in the top-right ---
-cart_html = """
-<div style="position:fixed; top:10px; right:20px; z-index:1000;">
-  <a href="/cart">
+# --- Top-right icons: Chart & Cart ---
+top_bar_html = """
+<div style="position:fixed; top:10px; right:20px; z-index:1000; display:flex; gap:12px;">
+  <a href="/analytics" title="View Analytics">
+    <img src="https://img.icons8.com/ios-filled/40/000000/combo-chart.png" alt="Chart"/>
+  </a>
+  <a href="/cart" title="View Cart">
     <img src="https://img.icons8.com/ios-filled/40/000000/shopping-cart.png" alt="Cart"/>
   </a>
 </div>
 """
-st.markdown(cart_html, unsafe_allow_html=True)
+st.markdown(top_bar_html, unsafe_allow_html=True)
 
 # --- Session Defaults ---
 if "user" not in st.session_state:
@@ -31,7 +34,7 @@ if "subscription" not in st.session_state:
     st.session_state.subscription = "Free"
 
 # --- Tabs ---
-tab1, tab2, tab3 = st.tabs(["🏠 Home", "⚙️ Preferences", "👤 Profile"])
+tab1, tab2, tab3 = st.tabs(["Home", "Preferences", "Profile"])
 
 # --- Tab 1: Home ---
 with tab1:

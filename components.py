@@ -18,7 +18,7 @@ def login_form():
 def preferences_form(prefs: dict, disabled: bool):
     st.sidebar.subheader("Preferences")
     spice = st.sidebar.slider(
-        "Spice Level", 1, 3, prefs.get("spice_level", 5), disabled=disabled
+        "Spice Level", 1, 5, prefs.get("spice_level", 2), disabled=disabled
     )
     serving = st.sidebar.slider(
         "Serving", 1, 5, prefs.get("serving", 2), disabled=disabled

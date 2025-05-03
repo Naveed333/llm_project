@@ -1,4 +1,4 @@
-# app.py (updated with optional recipe name for paid users)
+# app.py
 
 import streamlit as st
 from db import get_db_connection
@@ -14,6 +14,16 @@ conn = get_db_connection()
 # --- Page Config & CSS omitted for brevity ---
 st.set_page_config(page_title="IngrEdibles")
 
+# --- Cart icon in the top-right ---
+cart_html = """
+<div style="position:fixed; top:10px; right:20px; z-index:1000;">
+  <a href="/cart">
+    <img src="https://img.icons8.com/ios-filled/40/000000/shopping-cart.png"/>
+  </a>
+</div>
+"""
+st.markdown(cart_html, unsafe_allow_html=True)
+
 # --- Session Defaults ---
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -23,6 +33,7 @@ if "subscription" not in st.session_state:
 # --- Tabs ---
 tab1, tab2, tab3 = st.tabs(["🏠 Home", "⚙️ Preferences", "👤 Profile"])
 
+# --- Tab 1: Home ---
 with tab1:
     st.header("IngrEdible AI")
     if not st.session_state.user:
@@ -102,7 +113,6 @@ with tab1:
                         preferences=pref_str,
                         recipe_name=recipe_name,  # new optional parameter
                     )
-                    # st.text_area("Your Recipe:", recipe, height=400)
                     st.markdown(recipe, unsafe_allow_html=True)
 
                 else:
@@ -119,7 +129,6 @@ with tab1:
             except Exception as e:
                 st.error(f"Error generating recipe: {e}")
 
-# (Tabs 2 & 3 remain unchanged)
 # --- Tab 2: Preferences ---
 with tab2:
     st.header("Manage Your Preferences")
@@ -240,3 +249,23 @@ with tab3:
                     st.session_state.pop(key, None)
                 st.success("You have been logged out.")
         st.markdown("</div>", unsafe_allow_html=True)
+
+# --- Footer with social media icons ---
+footer_html = """
+<hr style="margin-top:2rem;"/>
+<div style="text-align:center; padding:1rem 0;">
+  <a href="https://twitter.com/YourProfile" target="_blank" style="margin:0 8px;">
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/twitter.png"/>
+  </a>
+  <a href="https://facebook.com/YourProfile" target="_blank" style="margin:0 8px;">
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/facebook-new.png"/>
+  </a>
+  <a href="https://instagram.com/YourProfile" target="_blank" style="margin:0 8px;">
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/instagram-new.png"/>
+  </a>
+  <a href="https://linkedin.com/in/YourProfile" target="_blank" style="margin:0 8px;">
+    <img src="https://img.icons8.com/ios-glyphs/24/000000/linkedin-circled.png"/>
+  </a>
+</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)

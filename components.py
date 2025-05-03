@@ -77,7 +77,7 @@ def preferences_form(prefs: dict, disabled: bool):
 
 # Ingredient input component
 def ingredient_input():
-    st.sidebar.subheader("1️⃣ Ingredients")
+    st.sidebar.subheader("Ingredients")
     uploaded = st.sidebar.file_uploader("Upload Image", type=["jpg", "png"])
     manual = st.sidebar.text_input("Or type ingredients", "")
     top_k = None

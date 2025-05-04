@@ -24,7 +24,7 @@ candidate_labels: List[str] = [
     "lettuce",
     "cabbage",
     "broccoli",
-    "cauliflower",
+    # "cauliflower",
     "zucchini",
     "pepper",
     "peas",
@@ -33,7 +33,9 @@ candidate_labels: List[str] = [
     "celery",
     "garlic",
     "ginger",
-    "mushroom",
+    "lemon",
+    "Green Chilli",
+    # "mushroom",
 ]
 
 

@@ -1,0 +1,6 @@
+torch>=2.0.0
+transformers>=4.30.0
+bitsandbytes>=0.39.0
+accelerate>=0.22.0
+streamlit>=1.25.0
+pillow>=9.5.0

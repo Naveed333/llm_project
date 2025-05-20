@@ -1,5 +1,4 @@
 # recipe_gen.py
-
 import os
 import torch
 from transformers import (
@@ -10,51 +9,58 @@ from transformers import (
 from typing import List, Dict
 
 # ——— Hugging Face authentication ———
-# Read token from env var if you’ve set one via `export HUGGINGFACE_TOKEN=hf_xxx`
 hf_token = os.getenv("HUGGINGFACE_TOKEN")
-token_args = {"use_auth_token": hf_token} if hf_token else {}
+if not hf_token:
+    raise ValueError("Please set your HF token in $HUGGINGFACE_TOKEN")
+token_args = {"token": hf_token}
 
-# ——— Device & 8-bit config ———
+# ——— Device & (optional) 8-bit config ———
 device = "cuda" if torch.cuda.is_available() else "cpu"
 bnb_config = BitsAndBytesConfig(load_in_8bit=True)
 
 
-def load_model_and_tokenizer(model_name: str):
-    """
-    Attempt to load an 8-bit quantized model with device_map; on
-    failure (missing accelerate or unsupported), fall back to full-precision.
-    """
-    # 1) tokenizer (always small)
-    tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, **token_args)
+def load_gemma(model_name: str = "google/gemma-3-1b-it"):
+    # 1) tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name,
+        use_fast=True,
+        trust_remote_code=True,
+        **token_args,
+    )
 
-    # 2) model: try quantized + device_map
-    try:
+    # 2) model: only quantize on GPU
+    if torch.cuda.is_available():
+        try:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                quantization_config=bnb_config,
+                device_map="auto",
+                trust_remote_code=True,
+                **token_args,
+            )
+            print(f"✅ Loaded 8-bit quantized {model_name}")
+        except Exception as e:
+            print(f"⚠️ 8-bit quant failed ({e}); loading FP32 instead.")
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                trust_remote_code=True,
+                **token_args,
+            )
+    else:
+        print("⚠️ No CUDA GPU detected — loading full-precision on CPU.")
         model = AutoModelForCausalLM.from_pretrained(
-            model_name, quantization_config=bnb_config, device_map="auto", **token_args
+            model_name,
+            trust_remote_code=True,
+            **token_args,
         )
-        print(f"✅ Loaded 8-bit quantized {model_name}")
-    except (ValueError, ImportError) as e:
-        # could be missing accelerate or unsupported quantization
-        print(f"⚠️ 8-bit load failed for {model_name} ({e}); loading FP32 instead.")
-        model = AutoModelForCausalLM.from_pretrained(model_name, **token_args)
-        model.to(device)
 
+    model.to(device)
     model.eval()
     return tokenizer, model
 
 
-# ——— Primary & fallback ———
-primary = "google/gemma-3-1b-it"
-fallback = "tiiuae/falcon-7b-instruct"
-
-try:
-    tokenizer, model = load_model_and_tokenizer(primary)
-except Exception as exc:
-    print(
-        f"⚠️ Could not load primary model {primary} ({exc}); falling back to {fallback}"
-    )
-    tokenizer, model = load_model_and_tokenizer(fallback)
-
+# Load Gemma once
+tokenizer, model = load_gemma()
 print(f"Using device: {device}  |  Model device: {model.device}")
 
 
@@ -75,7 +81,7 @@ def generate_text(
             repetition_penalty=repetition_penalty,
         )
     text = tokenizer.decode(out[0], skip_special_tokens=True)
-    return text.split("[/INST]")[-1].strip() if "[/INST]" in text else text
+    return text.split("[/INST]")[-1].strip()
 
 
 def generate_recipe(
